@@ -1,3 +1,3 @@
 export const config = {
-    secret: 'ertwer$#%$@ED',
+	secret: 'ertwer$#%$@ED',
 };
