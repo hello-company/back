@@ -1,7 +1,7 @@
 import { ID, Int } from 'ts2graphql';
 export interface Query {
-	getSpace?(args: { spaceId: ID }): Space;
-	myAccount?(args: {}): Account;
+	getSpace(args: { spaceId: ID }): Space | undefined;
+	myAccount(args: {}): Account | undefined;
 	getDateDiff(args: { date: Date }): Int;
 }
 interface Mutation {
