@@ -1,4 +1,5 @@
 import DataLoader from 'dataloader';
+import { NotFoundError } from './utils';
 export interface DBUser {
 	id: string;
 	name: string;
@@ -26,7 +27,11 @@ export interface DBCoffee {
 }
 
 async function fetchAllFrom<T>(ids: string[], map: Map<string, T>): Promise<(T)[]> {
-	return ids.map(id => map.get(id)!);
+	return ids.map(id => {
+		const row = map.get(id);
+		if (!row) throw new NotFoundError();
+		return row;
+	});
 }
 
 function createTable<T>() {
@@ -41,7 +46,7 @@ function createTable<T>() {
 			return data;
 		},
 		async update(id: string, data: Partial<T>) {
-            const newUser = { ...map.get(id)!, ...data };
+			const newUser = { ...map.get(id)!, ...data };
 			map.set(id, newUser);
 			return newUser;
 		},

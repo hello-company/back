@@ -1,40 +1,37 @@
-import { fromPromise } from 'ts2graphql';
 import { db } from './fakedb';
-import { Account, Coffee, Query, Space, User, Mutation } from './schema';
-import { withCurrentUser } from './utils';
+import { Account, Coffee, Mutation, Query, Space, User } from './schema';
+import { entity, entityList, method } from './utils';
 
 export const query: Query & Mutation = {
-	getSpace: args => fromPromise(getSpace(args.spaceId))!,
-	myAccount: withCurrentUser((_args, user) => user && getAccount(user.id)),
-	getDateDiff: args => Date.now() - args.date.getTime(),
-
-	createSpace: args => fromPromise(createSpace(args.name)),
-	updateAccount: withCurrentUser((args, user) => user && updateAccount(user.id, args)),
+	getSpace: method(args => getSpace(args.spaceId)),
+	myAccount: method((_, user) => user && getAccount(user.id)),
+	getDateDiff: method(async args => Date.now() - args.date.getTime()),
+	createSpace: method(args => createSpace(args.name)),
+	updateAccount: method((args, user) => user && updateAccount(user.id, args)),
 };
 
-async function getSpace(id: string): Promise<Space | undefined> {
+async function getSpace(id: string): Promise<Space> {
 	const space = await db.space.findById(id);
-	if (!space) return;
 	return {
 		id: space.id,
 		name: space.name,
-		users: fromPromise(() => space.userIds.map(getUser)),
+		users: entityList(space.userIds, getUser),
 	};
 }
 
 async function createSpace(name: string): Promise<Space> {
 	const dbspace = await db.space.create({ id: '2', name, userIds: [] });
-	return (await getSpace(dbspace.id))!;
+	return await getSpace(dbspace.id);
 }
 
 async function getCoffee(id: string): Promise<Coffee> {
 	const coffee = await db.coffee.findById(id);
 	return {
 		id: coffee.id,
-		user1: fromPromise(() => getUser(coffee.user1Id)),
-		user2: fromPromise(() => getUser(coffee.user2Id)),
+		user1: entity(coffee.user1Id, getUser),
+		user2: entity(coffee.user2Id, getUser),
 		date: coffee.date,
-		photos: fromPromise(() => coffee.photoIds.map(getImage)),
+		photos: entityList(coffee.photoIds, getImage),
 	};
 }
 
@@ -44,7 +41,7 @@ async function getUser(id: string): Promise<User> {
 		id: user.id,
 		name: user.name,
 		info: user.info,
-		photos: fromPromise(() => user.photoIds.map(getImage)),
+		photos: entityList(user.photoIds, getImage),
 	};
 }
 
@@ -54,8 +51,8 @@ async function getAccount(id: string): Promise<Account> {
 		id: user.id,
 		name: user.name,
 		info: user.info,
-		history: fromPromise(() => user.historyIds.map(getCoffee)),
-		photos: fromPromise(() => user.photoIds.map(getImage)),
+		history: entityList(user.historyIds, getCoffee),
+		photos: entityList(user.photoIds, getImage),
 	};
 }
 
