@@ -16,4 +16,8 @@ export function entityList<T>(ids: string[], getEntity: (id: string) => Promise<
 	return (() => ids.map(getEntity)) as any;
 }
 
-export class NotFoundError extends Error {}
+export class NotFoundError extends Error {
+    constructor() {
+        super('NotFoundError');
+    }
+}
