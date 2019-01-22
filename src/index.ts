@@ -25,10 +25,11 @@ express.use((req, res, next) => {
 	});
 });
 
+const schema = createSchema(__dirname + '/graphql/schema.d.ts');
 express.use(
 	'/api/graphql',
 	graphqlHTTP({
-		schema: createSchema(__dirname + '/graphql/schema.d.ts'),
+		schema: schema,
 		rootValue: query,
 		graphiql: true,
 		formatError(err) {
@@ -49,4 +50,4 @@ express.listen(4000, () =>
 	),
 );
 
-declare const type = '__typename';
+// console.log(printSchema(schema));

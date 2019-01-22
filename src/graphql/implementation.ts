@@ -1,14 +1,48 @@
-import { db } from './fakedb';
-import { Account, Coffee, Mutation, Query, Space, User } from './schema';
-import { entity, entityList, method } from './utils';
+import { db, DBMessage } from './fakedb';
+import { authZone, entity, entityList, method } from './utils';
+import {
+	Account,
+	Coffee,
+	Query,
+	Space,
+	User,
+	Mutation,
+	Message,
+	Chat,
+	Image,
+	MessageValue,
+} from './schema';
 
 export const query: Query & Mutation = {
 	getSpace: method(args => getSpace(args.spaceId)),
-	myAccount: method((_, user) => user && getAccount(user.id)),
+	myAccount: authZone((_, user) => getAccount(user.id)),
 	getDateDiff: method(async args => Date.now() - args.date.getTime()),
-	createSpace: method(args => createSpace(args.name)),
-	updateAccount: method((args, user) => user && updateAccount(user.id, args)),
+	createSpace: authZone(args => createSpace(args.name)),
+	updateAccount: authZone((args, user) => user && updateAccount(user.id, args)),
+	getChat: authZone(args => getChat(args.chatId)),
+	// addMessage: authZone((msg, user) => addMessage(user.id, msg.msg)),
+	addMessageText: authZone((msg, user) => addMessage(user.id, { type: 'text', text: msg.text })),
+	addMessageCoord: authZone((msg, user) =>
+		addMessage(user.id, { type: 'coord', lat: msg.lat, lon: msg.lon }),
+	),
+	addMessageImage: authZone((msg, user) => addMessage(user.id, { type: 'image', id: msg.imageId })),
+	removeMessage: authZone((args, user) => removeMessage(user.id, args.msgId)),
 };
+
+async function addMessage(userId: string, msg: DBMessage['message']) {
+	await db.messages.create({
+		id: '1',
+		message: msg,
+		date: new Date(),
+		authorId: userId,
+	});
+	return true;
+}
+
+async function removeMessage(userId: string, msgId: string) {
+	// todo: check userid
+	return await db.messages.remove(msgId);
+}
 
 async function getSpace(id: string): Promise<Space> {
 	const space = await db.space.findById(id);
@@ -32,6 +66,30 @@ async function getCoffee(id: string): Promise<Coffee> {
 		user2: entity(coffee.user2Id, getUser),
 		date: coffee.date,
 		photos: entityList(coffee.photoIds, getImage),
+	};
+}
+
+async function getChat(chatId: string): Promise<Chat> {
+	const chat = await db.chat.findById(chatId);
+	return {
+		id: chat.id,
+		messages: entityList(chat.messagesIds, getMessage),
+	};
+}
+
+async function getMessageValue(obj: DBMessage['message']): Promise<MessageValue> {
+	if (obj.type === 'text') return { __typename: 'MessageText', text: obj.text };
+	if (obj.type === 'coord') return { __typename: 'Coord', lat: obj.lat, lan: obj.lon };
+	if (obj.type === 'image') return getImage(obj.id);
+	throw new Error('Never');
+}
+async function getMessage(messageId: string): Promise<Message> {
+	const message = await db.messages.findById(messageId);
+	return {
+		id: message.id,
+		author: entity(message.authorId, getUser),
+		date: message.date,
+		message: entity(message.message, getMessageValue),
 	};
 }
 
@@ -65,6 +123,13 @@ async function updateAccount(
 	return getAccount(userId);
 }
 
-async function getImage(id: string) {
-	return db.image.findById(id);
+async function getImage(id: string): Promise<Image> {
+	const image = await db.image.findById(id);
+	return {
+		id: image.id,
+		__typename: 'Image',
+		url: image.url,
+		width: image.width,
+		height: image.height,
+	};
 }
