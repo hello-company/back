@@ -40,7 +40,8 @@ async function addMessage(userId: string, msg: DBMessage['message']) {
 }
 
 async function removeMessage(userId: string, msgId: string) {
-	// todo: check userid
+	const msg = await db.messages.findById(msgId);
+	if (msg.authorId !== userId) throw new Error('You can remove only your messages');
 	return await db.messages.remove(msgId);
 }
 

@@ -7,11 +7,6 @@ export interface Query {
 	getChat(args: { chatId: ID }): Chat | undefined;
 }
 
-type MessageInput =
-	| { type: 'coord'; lat: Float; lon: Float }
-	| { type: 'text'; text: string }
-	| { type: 'image'; id: ID };
-
 interface Mutation {
 	createSpace(args: { name: string }): Space;
 	updateAccount(args: { photos?: ID[] }): Account;
