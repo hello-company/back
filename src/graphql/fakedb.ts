@@ -6,6 +6,7 @@ export interface DBUser {
 	info: string;
 	photoIds: string[];
 	historyIds: string[];
+	spaceIds: string[];
 }
 export interface DBSpace {
 	id: string;
@@ -78,6 +79,7 @@ db.user.create({
 	info: 'Hello, my name is Ivan',
 	photoIds: ['1'],
 	historyIds: ['1'],
+	spaceIds: ['1'],
 });
 db.user.create({
 	id: '2',
@@ -85,6 +87,15 @@ db.user.create({
 	info: "I'm Julia, and I'm graphic designer",
 	photoIds: ['2'],
 	historyIds: ['1'],
+	spaceIds: ['1', '2'],
+});
+db.user.create({
+	id: '3',
+	name: 'Vova',
+	info: "I'm vova",
+	photoIds: ['2'],
+	historyIds: ['1'],
+	spaceIds: ['2'],
 });
 db.coffee.create({
 	id: '1',
@@ -94,3 +105,4 @@ db.coffee.create({
 	user2Id: '2',
 });
 db.space.create({ id: '1', name: 'Yandex', userIds: ['1', '2'] });
+db.space.create({ id: '2', name: 'Google', userIds: ['2', '3'] });

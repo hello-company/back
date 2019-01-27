@@ -1,14 +1,19 @@
-import { db } from './fakedb';
+import { db, DBUser } from './fakedb';
 import { Account, Coffee, Mutation, Query, Space, User } from './schema';
 import { entity, entityList, method } from './utils';
 
 export const query: Query & Mutation = {
+	getMySpaces: method((args, user) => getMySpaces(user!)),
 	getSpace: method(args => getSpace(args.spaceId)),
 	myAccount: method((_, user) => user && getAccount(user.id)),
 	getDateDiff: method(async args => Date.now() - args.date.getTime()),
 	createSpace: method(args => createSpace(args.name)),
 	updateAccount: method((args, user) => user && updateAccount(user.id, args)),
 };
+
+function getMySpaces(user: DBUser) {
+	return Promise.all(user.spaceIds.map(getSpace));
+}
 
 async function getSpace(id: string): Promise<Space> {
 	const space = await db.space.findById(id);

@@ -1,5 +1,6 @@
 import { ID, Int } from 'ts2graphql';
 export interface Query {
+	getMySpaces(args: {}): Space;
 	getSpace(args: { spaceId: ID }): Space | undefined;
 	myAccount(args: {}): Account | undefined;
 	getDateDiff(args: { date: Date }): Int;
