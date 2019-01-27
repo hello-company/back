@@ -9,15 +9,23 @@ export function method<Arg, T>(cb: (arg: Arg, user: DBUser | undefined) => Promi
 	};
 }
 
-export function entity<T>(id: string, getEntity: (id: string) => Promise<T>): T {
+export function authZone<Arg, T>(cb: (arg: Arg, user: DBUser) => Promise<T> | undefined) {
+	return (args: Arg, ctx?: ReqWithUser) => {
+		const user = ctx!.currentUser;
+		if (!user) throw new Error('Authorized users only');
+		return fromPromise(cb(args, user)!);
+	};
+}
+
+export function entity<K, T>(id: K, getEntity: (id: K) => Promise<T>): T {
 	return (() => getEntity(id)) as any;
 }
-export function entityList<T>(ids: string[], getEntity: (id: string) => Promise<T>): T[] {
+export function entityList<K, T>(ids: K[], getEntity: (id: K) => Promise<T>): T[] {
 	return (() => ids.map(getEntity)) as any;
 }
 
 export class NotFoundError extends Error {
-    constructor() {
-        super('NotFoundError');
-    }
+	constructor(message: string) {
+		super('NotFoundError ' + message);
+	}
 }

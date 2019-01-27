@@ -27,17 +27,32 @@ export interface DBCoffee {
 	photoIds: string[];
 }
 
-async function fetchAllFrom<T>(ids: string[], map: Map<string, T>): Promise<(T)[]> {
+export interface DBChat {
+	id: string;
+	messagesIds: string[];
+}
+
+export interface DBMessage {
+	id: string;
+	authorId: string;
+	date: Date;
+	message:
+		| { type: 'coord'; lat: number; lon: number }
+		| { type: 'text'; text: string }
+		| { type: 'image'; id: string };
+}
+
+async function fetchAllFrom<T>(name: string, ids: string[], map: Map<string, T>): Promise<(T)[]> {
 	return ids.map(id => {
 		const row = map.get(id);
-		if (!row) throw new NotFoundError();
+		if (!row) throw new NotFoundError(`${name}:${id} is not found`);
 		return row;
 	});
 }
 
-function createTable<T>() {
+function createTable<T>(name: string) {
 	const map = new Map<string, T>();
-	const loader = new DataLoader<string, T>(ids => fetchAllFrom(ids, map), { cache: false });
+	const loader = new DataLoader<string, T>(ids => fetchAllFrom(name, ids, map), { cache: false });
 	return {
 		findById(id: string) {
 			return loader.load(id);
@@ -51,14 +66,19 @@ function createTable<T>() {
 			map.set(id, newUser);
 			return newUser;
 		},
+        async remove(id: string) {
+			return map.delete(id);
+		},
 	};
 }
 
 export const db = {
-	user: createTable<DBUser>(),
-	space: createTable<DBSpace>(),
-	image: createTable<DBImage>(),
-	coffee: createTable<DBCoffee>(),
+	user: createTable<DBUser>('user'),
+	space: createTable<DBSpace>('space'),
+	image: createTable<DBImage>('image'),
+	coffee: createTable<DBCoffee>('coffee'),
+	chat: createTable<DBChat>('chat'),
+	messages: createTable<DBMessage>('messages'),
 };
 
 db.image.create({
@@ -106,3 +126,23 @@ db.coffee.create({
 });
 db.space.create({ id: '1', name: 'Yandex', userIds: ['1', '2'] });
 db.space.create({ id: '2', name: 'Google', userIds: ['2', '3'] });
+
+db.chat.create({ id: '1', messagesIds: ['1', '2', '3'] });
+db.messages.create({
+	id: '1',
+	authorId: '1',
+	date: new Date(),
+	message: { type: 'text', text: 'Hey' },
+});
+db.messages.create({
+	id: '2',
+	authorId: '1',
+	date: new Date(),
+	message: { type: 'coord', lat: 13, lon: 34 },
+});
+db.messages.create({
+	id: '3',
+	authorId: '1',
+	date: new Date(),
+	message: { type: 'image', id: '1' },
+});

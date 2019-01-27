@@ -58,4 +58,4 @@ express.listen(4000, () =>
 	),
 );
 
-declare const type = '__typename';
+// console.log(printSchema(schema));
