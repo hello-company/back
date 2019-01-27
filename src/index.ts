@@ -6,7 +6,7 @@ import { config } from './config';
 import { db, DBUser } from './graphql/fakedb';
 import { query } from './graphql/implementation';
 import { printSchema } from 'graphql';
-
+import cors from 'cors';
 // const bundler = new Bundler(__dirname + '/../front/src/index.html', { cache: false });
 // express.use((bundler as any).middleware());
 
@@ -16,6 +16,7 @@ export interface ReqWithUser extends Request {
 
 const express = Express();
 express.use(session({ secret: config.secret, resave: true, saveUninitialized: true }));
+express.use(cors());
 
 express.use((req, res, next) => {
 	const currentUserId = '1';
@@ -25,12 +26,20 @@ express.use((req, res, next) => {
 	});
 });
 
-express.use(
+const schema = createSchema(__dirname + '/graphql/schema.d.ts');
+express.get(
 	'/api/graphql',
 	graphqlHTTP({
-		schema: createSchema(__dirname + '/graphql/schema.d.ts'),
+		schema: schema,
 		rootValue: query,
 		graphiql: true,
+	}),
+);
+express.post(
+	'/api/graphql',
+	graphqlHTTP({
+		schema: schema,
+		rootValue: query,
 		formatError(err) {
 			console.error(err);
 			return err;
