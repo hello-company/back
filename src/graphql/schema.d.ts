@@ -1,4 +1,6 @@
-import { Float, ID, Int } from 'ts2graphql';
+type Float = number;
+type Int = number;
+type ID = string;
 export interface Query {
 	getMySpaces(args: {}): Space[];
 	getSpace(args: { spaceId: ID }): Space | undefined;
